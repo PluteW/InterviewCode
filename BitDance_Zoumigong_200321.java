@@ -4,32 +4,34 @@ import java.util.*;
 
 public class BitDance_Zoumigong_200321 {
     public static void main(String[] args) {
-        int[][] nums = {
-                {0,0,1,0,0,0,1,0},
-                {0,0,1,0,0,0,1,0},
-                {0,0,1,0,1,1,0,1},
-                {0,1,1,1,0,0,1,0},
-                {0,0,0,1,0,0,0,0},
-                {0,1,0,0,0,1,0,1},
-                {0,1,1,1,1,0,0,1},
-                {1,1,0,0,0,1,0,1},
-                {1,1,0,0,0,0,0,0}
-        };
         BitDance_Zoumigong_200321 Solution = new BitDance_Zoumigong_200321();
-        List<int[]> ret = Solution.solutionDFS(nums);
-        for (int[] r: ret) {
-            System.out.println(r[0]+ " "+r[1]);
-        }
-        int retBFS = Solution.solutionBFS(nums);
-        System.out.println(retBFS);
+//        int[][] nums = {
+//                {0,0,1,0,0,0,1,0},
+//                {0,0,1,0,0,0,1,0},
+//                {0,0,1,0,1,1,0,1},
+//                {0,1,1,1,0,0,1,0},
+//                {0,0,0,1,0,0,0,0},
+//                {0,1,0,0,0,1,0,1},
+//                {0,1,1,1,1,0,0,1},
+//                {1,1,0,0,0,1,0,1},
+//                {1,1,0,0,0,0,0,0}
+//        };
+//        List<int[]> ret = Solution.solutionDFS(nums);
+//        for (int[] r: ret) {
+//            System.out.println(r[0]+ " "+r[1]);
+//        }
+//        int retBFS = Solution.solutionBFS(nums);
+//        System.out.println(retBFS);
 
         int[][] transNums = {
-                {1,0,-1,1},
+                {0,0,-1,1},
                 {-2,0,-1,-3},
-                {2,2,0,0}
+                {2,2,1,0}
         };
-        int transRet = Solution.solutionTransfer(transNums);
-        System.out.println(transRet);
+//        int transRet = Solution.solutionTransfer(transNums);
+//        System.out.println(transRet);
+        int transRetS = Solution.solutionTransferS(transNums);
+        System.out.println(transRetS);
     }
     /**
      * @Description：  获得一条走出迷宫的路径
@@ -202,6 +204,77 @@ public class BitDance_Zoumigong_200321 {
         return count[endRow][endCow];
     }
 
+
+    public int solutionTransferS(int[][] nums){
+        int rows = nums.length;
+        int cows = nums[0].length;
+        HashMap<Integer,List<int[]>> hashMap = new HashMap<>();
+        int endRow=0,endCow=0,startRow=0,startCow = 0;
+//        先获得起始位置、终点位置，以及各个传送门的位置
+//        将传送门的代号和位置保存到hashmap中
+        for (int i = 0; i<rows;i++){
+            for (int j = 0;j<cows;j++){
+                if (nums[i][j] == -2){
+                    startRow = i;
+                    startCow = j;
+                }else if (nums[i][j] == -3){
+                    endRow = i;
+                    endCow = j;
+                }else {
+                    if (nums[i][j]>0){
+                        if ( !hashMap.containsKey(nums[i][j])){
+                            List<int[]> list = new LinkedList<>();
+                            hashMap.put(nums[i][j],list);
+                        }
+                        hashMap.get(nums[i][j]).add(new int[]{i,j});
+                    }
+                }
+            }
+        }
+        int[][] count = new int[rows][cows];
+        for (int i = 0;i<rows;i++){
+            Arrays.fill(count[i],Integer.MAX_VALUE);
+        }
+        count[startRow][startCow] = 0;
+        Position p = new Position(startRow,startCow);
+        Deque<Position> deque = new LinkedList<>();
+        deque.addFirst(p);
+        List<int[]> list;
+        int[] r = {0,1,0,-1};
+        int[] c = {1,0,-1,0};
+        while (!deque.isEmpty()){
+            p = deque.pollLast();
+            for (int i = 0; i<4;i++){
+                int tempR = p.row+r[i];
+                int tempC = p.cow+c[i];
+                if (tempR>-1 && tempR<rows && tempC>-1 && tempC<cows && nums[tempR][tempC] != -1){
+                    if (nums[p.row][p.cow] >0 && nums[tempR][tempC] == nums[p.row][p.cow]){
+                        continue;
+                    }
+                    if (count[tempR][tempC] > count[p.row][p.cow]+1){
+                        count[tempR][tempC] = count[p.row][p.cow]+1;
+                        Position temp = new Position(tempR,tempC);
+                        deque.addFirst(temp);
+                    }
+                }
+            }
+            if (hashMap.containsKey(nums[p.row][p.cow])){
+                list = hashMap.get(nums[p.row][p.cow]);
+                for (int[] t:list) {
+                    if (p.row!=t[0] || p.cow!=t[1]){
+                        if (count[t[0]][t[1]] > count[p.row][p.cow]){
+                            count[t[0]][t[1]] = count[p.row][p.cow];
+                            p.row = t[0];
+                            p.cow = t[1];
+                            deque.addFirst(p);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        return count[endRow][endCow];
+    }
 
     class Position{
         int row;
